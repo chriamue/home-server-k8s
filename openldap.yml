@@ -1,0 +1,74 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ldap
+  name: ldap-service
+spec:
+  ports:
+    - name: ldap
+      protocol: TCP
+      port: 389
+      targetPort: 389
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: ldap
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ldap
+  labels:
+    app: ldap
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      containers:
+        - name: ldap
+          image: osixia/openldap:1.2.3
+          args: ["--copy-service"]
+          envFrom:
+            - configMapRef:
+                name: openldap-env
+          volumeMounts:
+            - name: ldap-data
+              mountPath: /var/lib/ldap
+            - name: ldap-config
+              mountPath: /etc/ldap/slapd.d
+            - name: ldap-certs
+              mountPath: /container/service/slapd/assets/certs
+            - name: container-run
+              mountPath: /container/run
+          ports:
+            - containerPort: 389
+              name: openldap
+        - name: ldapadmin
+          image: osixia/phpldapadmin:latest
+          env:
+            - name: PHPLDAPADMIN_LDAP_HOSTS
+              value: "openldap"
+            - name: PHPLDAPADMIN_HTTPS
+              value: "false"
+          ports:
+            - containerPort: 80
+              name: ldapadmin
+      volumes:
+        - name: ldap-data
+          hostPath:
+            path: "/data/ldap/db"
+        - name: ldap-config
+          hostPath:
+            path: "/data/ldap/config"
+        - name: ldap-certs
+          hostPath:
+            path: "/data/ldap/certs"
+        - name: container-run
+          emptyDir: {}
