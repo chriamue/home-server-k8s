@@ -18,3 +18,11 @@ kubectl get all --all-namespaces
 ### openldap
 
 [https://github.com/osixia/docker-openldap/tree/stable/example/kubernetes/using-secrets]()
+
+### nextcloud
+[https://hub.docker.com/r/wonderfall/nextcloud/]()
+[https://github.com/sameersbn/docker-nextcloud/tree/master/kubernetes]()
+
+### gitlab
+
+[https://github.com/IBM/Kubernetes-container-service-GitLab-sample]()

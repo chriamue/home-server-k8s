@@ -100,6 +100,19 @@ spec:
     requests:
       storage: 10Gi
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  labels:
+    app: gitlab
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: gitlab
+    tier: postgreSQL
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -148,6 +161,20 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: gitlab
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: gitlab
+    tier: backend
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

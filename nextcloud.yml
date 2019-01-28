@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nextcloud-redis
   labels:
-    name: nextcloud-redis
+    app: nextcloud
 spec:
   ports:
     - name: redis
@@ -11,7 +11,7 @@ spec:
       targetPort: 6379
       protocol: TCP
   selector:
-    app: nextcloud-redis
+    app: nextcloud
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -20,13 +20,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: nextcloud-redis
+      app: nextcloud
       tier: backend
   replicas: 1
   template:
     metadata:
       labels:
-        app: nextcloud-redis
+        app: nextcloud
         tier: backend
     spec:
       hostname: redis
@@ -46,7 +46,7 @@ kind: Service
 metadata:
   name: nextcloud-db
   labels:
-    name: nextcloud-db
+    app: nextcloud
 spec:
   ports:
     - name: mariadb
@@ -55,20 +55,21 @@ spec:
       protocol: TCP
   selector:
     app: nextcloud-db
+    tier: backend
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: mariadb
   labels:
-    app: nextcloud-db
+    app: nextcloud
 spec:
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: nextcloud-db
+        app: nextcloud
         tier: backend
     spec:
       hostname: mariadb
