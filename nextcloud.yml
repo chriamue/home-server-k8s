@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service
+  labels:
+    app: nextcloud
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8888
+  selector:
+    app: nextcloud
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: nextcloud
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+        tier: backend
+    spec:
+      hostname: redis
+      containers:
+      - name: redis
+        image: redis:3.0.7-alpine
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - name: redis
+          containerPort: 6379
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mariadb
+  labels:
+    app: nextcloud
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+        tier: backend
+    spec:
+      hostname: mariadb
+      containers:
+      - name: mariadb
+        image: mariadb:10.4.1
+        env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: nextcloud
+            - name: MYSQL_USER
+              value: nextcloud
+            - name: MYSQL_DATABASE
+              value: nextcloud
+            - name: MYSQL_PASSWORD
+              value: nextcloud
+        ports:
+          - name: mariadb
+            containerPort: 3306
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nextcloud
+  labels:
+    app: nextcloud
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+        tier: frontend
+    spec:
+      hostname: nextcloud
+      containers:
+        - image: wonderfall/nextcloud:15
+          name: nextcloud
+          env:
+            - name: UID
+              value: '1000'
+            - name: GID
+              value: '1000'
+            - name: UPLOAD_MAX_SIZE
+              value: 10G
+            - name: APC_SHM_SIZE
+              value: 128M
+            - name: OPCACHE_MEM_SIZE
+              value: '128'
+            - name: REDIS_MAX_MEMORY
+              value: 64mb   
+            - name: CRON_PERIOD
+              value: 15m
+            - name: TZ
+              value: CET                                                                     
+            - name: ADMIN_USER
+              value: nextcloud
+            - name: ADMIN_PASSWORD
+              value: nextcloud
+            - name: DB_TYPE
+              value: mysql
+            - name: DB_NAME
+              value: nextcloud
+            - name: DB_USER
+              value: nextcloud
+            - name: DB_PASSWORD
+              value: nextcloud
+            - name: DB_HOST
+              value: mariadb
+          ports:
+            - name: nextcloud
+              containerPort: 8888

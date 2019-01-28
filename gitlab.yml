@@ -1,0 +1,225 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-service
+  labels:
+    app: gitlab
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: gitlab-https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+    - name: gitlab-ssh
+      port: 22
+      protocol: TCP
+      targetPort: 22
+  selector:
+    app: gitlab
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitlab-claim
+  labels:
+    app: gitlab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gitlab
+  labels:
+    app: gitlab
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitlab
+        tier: frontend
+    spec:
+      containers:
+        - image: gitlab/gitlab-ce:11.7.0-ce.0
+          name: gitlab
+          env:
+            - name: GITLAB_OMNIBUS_CONFIG
+              value: |
+                postgresql['enable'] = false
+                gitlab_rails['db_username'] = "gitlab"
+                gitlab_rails['db_password'] = "gitlab"
+                gitlab_rails['db_host'] = "postgresql"
+                gitlab_rails['db_port'] = "5432"
+                gitlab_rails['db_database'] = "gitlabhq_production"
+                gitlab_rails['db_adapter'] = 'postgresql'
+                gitlab_rails['db_encoding'] = 'utf8'
+                gitlab_rails['lfs_enabled'] = true
+                redis['enable'] = false
+                gitlab_rails['redis_host'] = 'redis'
+                gitlab_rails['redis_port'] = '6379'
+                gitlab_rails['gitlab_shell_ssh_port'] = 22
+                external_url 'http://gitlab.example.com'
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+          volumeMounts:
+            - name: gitlab
+              mountPath: /var/opt/gitlab
+              subPath: gitlab_data
+            - name: gitlab
+              mountPath: /etc/gitlab
+              subPath: gitlab_configuration
+      volumes:
+        - name: gitlab
+          persistentVolumeClaim:
+            claimName: gitlab-claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-claim
+  labels:
+    app: gitlab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: postgresql
+  labels:
+    app: gitlab
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitlab
+        tier: postgreSQL
+    spec:
+      containers:
+        - image: postgres:11.1-alpine
+          name: postgresql
+          env:
+            - name: POSTGRES_USER
+              value: gitlab
+            - name: POSTGRES_DB
+              value: gitlabhq_production
+            - name: POSTGRES_PASSWORD
+              value: gitlab
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          volumeMounts:
+            - name: postgresql
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgresql
+          persistentVolumeClaim:
+            claimName: postgres-claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-claim
+  labels:
+    app: gitlab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: gitlab
+spec:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitlab
+        tier: backend
+    spec:
+      containers:
+        - image: redis:3.0.7-alpine
+          name: redis
+          ports:
+            - containerPort: 6379
+              name: redis
+          volumeMounts:
+            - name: redis
+              mountPath: /data
+      volumes:
+        - name: redis
+          persistentVolumeClaim:
+            claimName: redis-claim
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-volume-1
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/data/pv-1
+  persistentVolumeReclaimPolicy: Recycle
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-volume-2
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/data/pv-2
+  persistentVolumeReclaimPolicy: Recycle
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-volume-3
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /tmp/data/pv-3
+  persistentVolumeReclaimPolicy: Recycle

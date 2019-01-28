@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+spec:
+  rules:
+  - host: ldap.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ldap-service
+          servicePort: 80
+  - host: gitlab.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: gitlab-service
+          servicePort: 80
+  - host: nextcloud.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextcloud-service
+          servicePort: 80
+          

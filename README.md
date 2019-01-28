@@ -9,6 +9,10 @@ kubectl get services
 kubectl delete .
 ```
 
+```bash
+kubectl get all --all-namespaces
+```
+
 ## services
 
 ### openldap
