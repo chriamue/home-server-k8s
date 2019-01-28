@@ -76,15 +76,9 @@ spec:
       containers:
       - name: mariadb
         image: mariadb:10.4.1
-        env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: nextcloud
-            - name: MYSQL_USER
-              value: nextcloud
-            - name: MYSQL_DATABASE
-              value: nextcloud
-            - name: MYSQL_PASSWORD
-              value: nextcloud
+        envFrom:
+          - configMapRef:
+              name: nextcloud-db-env
         ports:
           - name: mariadb
             containerPort: 3306
@@ -123,33 +117,9 @@ spec:
       containers:
         - image: wonderfall/nextcloud:15
           name: nextcloud
-          env:
-            - name: UID
-              value: '1000'
-            - name: GID
-              value: '1000'
-            - name: UPLOAD_MAX_SIZE
-              value: 10G
-            - name: APC_SHM_SIZE
-              value: 128M
-            - name: OPCACHE_MEM_SIZE
-              value: '128'
-            - name: REDIS_MAX_MEMORY
-              value: 64mb   
-            - name: CRON_PERIOD
-              value: 15m
-            - name: TZ
-              value: CET
-            - name: DB_TYPE
-              value: mysql
-            - name: DB_NAME
-              value: nextcloud
-            - name: DB_USER
-              value: nextcloud
-            - name: DB_PASSWORD
-              value: nextcloud
-            - name: DB_HOST
-              value: nextcloud-db
+          envFrom:
+          - configMapRef:
+              name: nextcloud-env
           ports:
             - name: nextcloud
               containerPort: 8888

@@ -34,7 +34,6 @@ spec:
       containers:
         - name: ldap
           image: osixia/openldap:1.2.3
-          args: ["--copy-service"]
           envFrom:
             - configMapRef:
                 name: openldap-env
@@ -54,7 +53,7 @@ spec:
           image: osixia/phpldapadmin:latest
           env:
             - name: PHPLDAPADMIN_LDAP_HOSTS
-              value: "openldap"
+              value: "ldap-service"
             - name: PHPLDAPADMIN_HTTPS
               value: "false"
           ports:
