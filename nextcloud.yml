@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: nextcloud-service
+  name: nextcloud-redis
   labels:
-    app: nextcloud
+    name: nextcloud-redis
 spec:
   ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 8888
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
   selector:
-    app: nextcloud
+    app: nextcloud-redis
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -20,13 +20,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: nextcloud
+      app: nextcloud-redis
       tier: backend
   replicas: 1
   template:
     metadata:
       labels:
-        app: nextcloud
+        app: nextcloud-redis
         tier: backend
     spec:
       hostname: redis
@@ -41,19 +41,34 @@ spec:
         - name: redis
           containerPort: 6379
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-db
+  labels:
+    name: nextcloud-db
+spec:
+  ports:
+    - name: mariadb
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: nextcloud-db
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: mariadb
   labels:
-    app: nextcloud
+    app: nextcloud-db
 spec:
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: nextcloud
+        app: nextcloud-db
         tier: backend
     spec:
       hostname: mariadb
@@ -72,6 +87,21 @@ spec:
         ports:
           - name: mariadb
             containerPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service
+  labels:
+    app: nextcloud
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8888
+  selector:
+    app: nextcloud
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -108,11 +138,7 @@ spec:
             - name: CRON_PERIOD
               value: 15m
             - name: TZ
-              value: CET                                                                     
-            - name: ADMIN_USER
-              value: nextcloud
-            - name: ADMIN_PASSWORD
-              value: nextcloud
+              value: CET
             - name: DB_TYPE
               value: mysql
             - name: DB_NAME
@@ -122,7 +148,7 @@ spec:
             - name: DB_PASSWORD
               value: nextcloud
             - name: DB_HOST
-              value: mariadb
+              value: nextcloud-db
           ports:
             - name: nextcloud
               containerPort: 8888
