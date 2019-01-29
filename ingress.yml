@@ -9,7 +9,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: ldap-service
+          serviceName: ldap-account-manager
           servicePort: 80
   - host: gitlab.example.com
     http:

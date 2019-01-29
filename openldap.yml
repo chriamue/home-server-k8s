@@ -11,10 +11,6 @@ spec:
       protocol: TCP
       port: 389
       targetPort: 389
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 80
   selector:
     app: ldap
 ---
@@ -49,16 +45,6 @@ spec:
           ports:
             - containerPort: 389
               name: openldap
-        - name: ldapadmin
-          image: osixia/phpldapadmin:latest
-          env:
-            - name: PHPLDAPADMIN_LDAP_HOSTS
-              value: "ldap-service"
-            - name: PHPLDAPADMIN_HTTPS
-              value: "false"
-          ports:
-            - containerPort: 80
-              name: ldapadmin
       volumes:
         - name: ldap-data
           hostPath:
@@ -71,3 +57,41 @@ spec:
             path: "/data/ldap/certs"
         - name: container-run
           emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ldap
+  name: ldap-account-manager
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: ldap
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ldap-account-manager
+  labels:
+    app: ldap
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      containers:
+        - name: ldap-account-manager
+          image: ldapaccountmanager/lam
+          command: ["/bin/sh"]
+          args: ["-c", "service apache2 start && sleep infinity"]
+          ports:
+            - name: lam
+              containerPort: 80
+              
