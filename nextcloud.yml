@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-redis
+  namespace: home-server
   labels:
     app: nextcloud
 spec:
@@ -16,7 +17,8 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: redis
+  name: nextcloud-redis
+  namespace: home-server
 spec:
   selector:
     matchLabels:
@@ -45,6 +47,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-db
+  namespace: home-server
   labels:
     app: nextcloud
 spec:
@@ -54,13 +57,14 @@ spec:
       targetPort: 3306
       protocol: TCP
   selector:
-    app: nextcloud-db
+    app: nextcloud
     tier: backend
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: mariadb
+  namespace: home-server
   labels:
     app: nextcloud
 spec:
@@ -87,6 +91,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nextcloud-service
+  namespace: home-server
   labels:
     app: nextcloud
 spec:
@@ -102,6 +107,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: nextcloud
+  namespace: home-server
   labels:
     app: nextcloud
 spec:

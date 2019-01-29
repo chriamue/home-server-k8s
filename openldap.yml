@@ -5,12 +5,17 @@ metadata:
   labels:
     app: ldap
   name: ldap-service
+  namespace: home-server
 spec:
   ports:
     - name: ldap
       protocol: TCP
       port: 389
       targetPort: 389
+    - name: ldaps
+      protocol: TCP
+      port: 636
+      targetPort: 636
   selector:
     app: ldap
 ---
@@ -18,6 +23,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: ldap
+  namespace: home-server
   labels:
     app: ldap
 spec:
@@ -43,8 +49,10 @@ spec:
             - name: container-run
               mountPath: /container/run
           ports:
-            - containerPort: 389
-              name: openldap
+            - name: ldap
+              containerPort: 389
+            - name: ldaps
+              containerPort: 636
       volumes:
         - name: ldap-data
           hostPath:
@@ -64,6 +72,7 @@ metadata:
   labels:
     app: ldap
   name: ldap-account-manager
+  namespace: home-server
 spec:
   ports:
     - name: http
@@ -77,6 +86,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: ldap-account-manager
+  namespace: home-server
   labels:
     app: ldap
 spec:
